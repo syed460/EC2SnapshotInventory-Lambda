@@ -4,7 +4,7 @@ import json, csv
 import boto3
 from pprint import pprint
 from datetime import datetime
-import subprocess
+import subprocess, os
 
 #def lambda_handler(event, context):
 print("---------------Script Starts-------------")
@@ -12,9 +12,9 @@ print("")
 
 #-------------------Variable-------------
 
-Bucket_region = "eu-west-1"
-Bucket_Name = "<bucket name>"
-filename="EC2_Snapshot_inventory"
+Bucket_region = os.getenv("Bucket_region")
+Bucket_Name = os.getenv("Bucket_Name")
+filename= os.getenv("filename")
 
 #----------------------------------------
 #defining file name
@@ -82,7 +82,8 @@ with open(filepath,'w') as csv_file:
         #pprint(all_snapshots)
         #print(" ")
         for each in all_snapshots['Snapshots']:
-            dic={'Region':region,'OwnerID':account_number,'Name': 'NA','SnapshotId':'NA','Description': 'NA','VolumeId':'NA','Capacity-GB':'NA','CreatedTime':'NA','WBS': 'NA','Encrypted':'NA','KmsKeyId':'NA','Progress':'NA','State':'NA'}
+            dic={'Region':region,'OwnerID':account_number,'Name': 'NA','SnapshotId':'NA','Description': 'NA','VolumeId':'NA','Capacity-GB':'NA',
+            'CreatedTime':'NA','WBS': 'NA','Encrypted':'NA','KmsKeyId':'NA','Progress':'NA','State':'NA'}
             #print(each.items())
             #print(each.keys())
             #print(each.values())
@@ -132,19 +133,22 @@ with open(filepath,'w') as csv_file:
 
                 
             
-            print(f"snapshot {x} details")
+            
             print(dic.keys())
             print(" ")
             print(dic)
             Writer.writerow(dic.values())
-            
+            print(f"\n------Snapshot {x} details been taken\n")
             x=x+1
-            print("------------")
+            
         
             
 #to check the what are the files exist under folder
-lscommand = subprocess.run(f"ls {filepath}", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-print(f"Output file Location:\n{lscommand.stdout.decode('utf-8')}")
+#lscommand = subprocess.run(f"ls {filepath}", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+lscommand = subprocess.run(f"ls {filepath}", shell=True, capture_output=True, text=True)
+print(f"Output file Location:\n{lscommand.stdout}")
+
+
 
 #transfer the file to s3
 print(f"moving the file to S3 Bucket: {Bucket_Name}")
